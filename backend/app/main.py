@@ -6,10 +6,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes.accounts import router as accounts_router
 from app.api.routes.futures import router as futures_router
+from app.api.routes.market import router as market_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.services.market_data import market_data_service
@@ -56,6 +58,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -69,6 +79,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Register routers
 app.include_router(accounts_router)
 app.include_router(futures_router)
+app.include_router(market_router)
 
 
 @app.get("/health")

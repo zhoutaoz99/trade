@@ -1,9 +1,83 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* === Light mode (default) === */
+:root {
+  --color-bg: #f8fafc;
+  --color-sidebar: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+
+  --color-text-body: #334155;
+  --color-text-heading: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-dim: #94a3b8;
+  --color-text-subtle: #cbd5e1;
+
+  --color-hover-row: rgba(0, 0, 0, 0.03);
+  --color-hover-item: rgba(0, 0, 0, 0.05);
+  --color-active-item: rgba(0, 0, 0, 0.08);
+  --color-ghost-hover: rgba(0, 0, 0, 0.08);
+  --color-modal-overlay: rgba(0, 0, 0, 0.60);
+
+  --color-green-text: #16a34a;
+  --color-green-bg: rgba(22, 163, 74, 0.10);
+  --color-green-border: rgba(22, 163, 74, 0.30);
+  --color-red-text: #dc2626;
+  --color-red-bg: rgba(220, 38, 38, 0.10);
+  --color-red-border: rgba(220, 38, 38, 0.30);
+  --color-yellow-text: #ca8a04;
+  --color-yellow-bg: rgba(202, 138, 4, 0.10);
+  --color-yellow-border: rgba(202, 138, 4, 0.30);
+  --color-blue-text: #2563eb;
+  --color-blue-bg: rgba(37, 99, 235, 0.10);
+  --color-blue-border: rgba(37, 99, 235, 0.30);
+
+  color-scheme: light;
+}
+
+/* === Dark mode === */
+.dark {
+  --color-bg: #0f1117;
+  --color-sidebar: #12141d;
+  --color-surface: #1a1d2e;
+  --color-border: #2a2e3f;
+
+  --color-text-body: #e2e8f0;
+  --color-text-heading: #ffffff;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-text-dim: #6b7280;
+  --color-text-subtle: #4b5563;
+
+  --color-hover-row: rgba(255, 255, 255, 0.02);
+  --color-hover-item: rgba(255, 255, 255, 0.05);
+  --color-active-item: rgba(255, 255, 255, 0.10);
+  --color-ghost-hover: rgba(255, 255, 255, 0.10);
+  --color-modal-overlay: rgba(0, 0, 0, 0.60);
+
+  --color-green-text: #4ade80;
+  --color-green-bg: rgba(34, 197, 94, 0.20);
+  --color-green-border: rgba(74, 222, 128, 0.30);
+  --color-red-text: #f87171;
+  --color-red-bg: rgba(239, 68, 68, 0.20);
+  --color-red-border: rgba(248, 113, 113, 0.30);
+  --color-yellow-text: #facc15;
+  --color-yellow-bg: rgba(250, 204, 21, 0.20);
+  --color-yellow-border: rgba(250, 204, 21, 0.30);
+  --color-blue-text: #60a5fa;
+  --color-blue-bg: rgba(96, 165, 250, 0.20);
+  --color-blue-border: rgba(96, 165, 250, 0.30);
+
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  background: #0f1117;
-  color: #e2e8f0;
+  background: var(--color-bg);
+  color: var(--color-text-body);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 

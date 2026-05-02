@@ -115,3 +115,10 @@ export interface AccountSummary {
 export interface PositionsResponse {
   positions: Position[];
 }
+
+export interface ListOrdersParams {
+  account_id: string;
+  symbol?: string;
+  limit?: number;
+  offset?: number;
+}

@@ -4,11 +4,11 @@ interface Props {
 }
 
 const classes: Record<string, string> = {
-  green: 'bg-green-500/20 text-green-400 border-green-500/30',
-  red: 'bg-red-500/20 text-red-400 border-red-500/30',
-  yellow: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  gray: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-  blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  green: 'bg-[var(--color-green-bg)] text-[var(--color-green-text)] border-[var(--color-green-border)]',
+  red: 'bg-[var(--color-red-bg)] text-[var(--color-red-text)] border-[var(--color-red-border)]',
+  yellow: 'bg-[var(--color-yellow-bg)] text-[var(--color-yellow-text)] border-[var(--color-yellow-border)]',
+  gray: 'bg-[var(--color-hover-item)] text-[var(--color-text-muted)] border-[var(--color-border)]',
+  blue: 'bg-[var(--color-blue-bg)] text-[var(--color-blue-text)] border-[var(--color-blue-border)]',
 };
 
 export default function Badge({ variant = 'gray', children }: Props) {

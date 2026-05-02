@@ -68,9 +68,10 @@ sudo systemctl restart postgresql
 
 ```bash
 # 1. 创建虚拟环境并安装依赖
-python3.11 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 
 # 2. 配置环境变量（如 .env 不存在）
 cp .env.example .env

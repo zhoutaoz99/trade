@@ -2,6 +2,7 @@ import apiClient from './client';
 import type {
   AccountSummary,
   ClosePositionRequest,
+  ListOrdersParams,
   OrderResponse,
   PlaceOrderRequest,
   PositionsResponse,
@@ -40,6 +41,13 @@ export const setLeverage = async (data: SetLeverageRequest): Promise<{ account_i
   return res.data;
 };
 
+export const getMarketPrice = async (symbol: string): Promise<{ symbol: string; ask_price: string; bid_price: string }> => {
+  const res = await apiClient.get('/api/v1/market/price', {
+    params: { symbol },
+  });
+  return res.data;
+};
+
 export const getOrder = async (
   accountId: string,
   clientOrderId: string,
@@ -47,5 +55,10 @@ export const getOrder = async (
   const res = await apiClient.get(`/api/v1/futures/orders/${clientOrderId}`, {
     params: { account_id: accountId },
   });
+  return res.data;
+};
+
+export const getOrders = async (params: ListOrdersParams): Promise<OrderResponse[]> => {
+  const res = await apiClient.get('/api/v1/futures/orders', { params });
   return res.data;
 };

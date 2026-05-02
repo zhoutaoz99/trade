@@ -1,5 +1,11 @@
 """Alembic environment configuration for async PostgreSQL."""
 
+import sys
+from pathlib import Path
+
+# 将 backend 目录加入 sys.path，使 app 模块可导入
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import asyncio
 from logging.config import fileConfig
 

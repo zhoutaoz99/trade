@@ -6,6 +6,7 @@ export function usePositions(accountId: string | undefined, symbol?: string) {
     queryKey: symbol ? ['positions', accountId, symbol] : ['positions', accountId],
     queryFn: () => getPositions(accountId!, symbol),
     enabled: !!accountId,
-    refetchInterval: 15_000,
+    refetchInterval: 5_000,
+    staleTime: 3_000,
   });
 }

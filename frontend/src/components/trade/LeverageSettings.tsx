@@ -13,10 +13,10 @@ export default function LeverageSettings({ currentLeverage, onSetLeverage, isSet
   const [value, setValue] = useState(currentLeverage);
 
   return (
-    <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-5">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-white">Leverage</h3>
-        <span className="text-xs text-gray-500">Current: {currentLeverage}x</span>
+        <h3 className="text-sm font-semibold text-[var(--color-text-heading)]">Leverage</h3>
+        <span className="text-xs text-[var(--color-text-dim)]">Current: {currentLeverage}x</span>
       </div>
 
       <div className="flex items-center gap-3 mb-3">
@@ -28,7 +28,7 @@ export default function LeverageSettings({ currentLeverage, onSetLeverage, isSet
           onChange={(e) => setValue(parseInt(e.target.value))}
           className="flex-1 accent-blue-500"
         />
-        <span className="text-white font-mono font-bold text-lg w-12 text-right">{value}x</span>
+        <span className="text-[var(--color-text-heading)] font-mono font-bold text-lg w-12 text-right">{value}x</span>
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -38,8 +38,8 @@ export default function LeverageSettings({ currentLeverage, onSetLeverage, isSet
             onClick={() => setValue(p)}
             className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
               value === p
-                ? 'border-blue-500 text-blue-400 bg-blue-500/10'
-                : 'border-[#2a2e3f] text-gray-400 hover:border-gray-500'
+                ? 'border-blue-500 text-[var(--color-blue-text)] bg-[var(--color-blue-bg)]'
+                : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-dim)]'
             }`}
           >
             {p}x

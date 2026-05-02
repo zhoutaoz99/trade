@@ -13,8 +13,8 @@ export default function DashboardPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Accounts</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage your simulated and live trading accounts</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text-heading)]">Accounts</h1>
+          <p className="text-sm text-[var(--color-text-dim)] mt-1">Manage your simulated and live trading accounts</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -40,8 +40,8 @@ export default function DashboardPage() {
       ) : (
         <div className="text-center py-20">
           <div className="text-6xl mb-4">📊</div>
-          <h2 className="text-xl font-semibold text-white mb-2">Welcome to UM Futures Sim Trading</h2>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+          <h2 className="text-xl font-semibold text-[var(--color-text-heading)] mb-2">Welcome to UM Futures Sim Trading</h2>
+          <p className="text-[var(--color-text-dim)] mb-6 max-w-md mx-auto">
             Create your first account to start trading. Simulated accounts use virtual funds,
             live accounts connect to Binance via API keys.
           </p>

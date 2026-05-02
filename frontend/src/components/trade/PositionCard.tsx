@@ -17,9 +17,9 @@ export default function PositionCard({ position: p, onClose, isClosing }: Props)
   const pctOptions = [25, 50, 75, 100];
 
   return (
-    <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-5">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-white">Current Position</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-heading)]">Current Position</h3>
         <Badge variant={isLong ? 'green' : 'red'}>
           {isLong ? 'LONG' : 'SHORT'} · {p.leverage}x
         </Badge>
@@ -27,19 +27,19 @@ export default function PositionCard({ position: p, onClose, isClosing }: Props)
 
       <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
         <div>
-          <div className="text-xs text-gray-500 mb-0.5">Size</div>
-          <div className="text-white font-mono">{fmtCrypto(Math.abs(qty))} {p.symbol.replace('USDT', '')}</div>
+          <div className="text-xs text-[var(--color-text-dim)] mb-0.5">Size</div>
+          <div className="text-[var(--color-text-heading)] font-mono">{fmtCrypto(Math.abs(qty))} {p.symbol.replace('USDT', '')}</div>
         </div>
         <div>
-          <div className="text-xs text-gray-500 mb-0.5">Entry Price</div>
-          <div className="text-white font-mono">{fmtMoney(p.entry_price)}</div>
+          <div className="text-xs text-[var(--color-text-dim)] mb-0.5">Entry Price</div>
+          <div className="text-[var(--color-text-heading)] font-mono">{fmtMoney(p.entry_price)}</div>
         </div>
         <div>
-          <div className="text-xs text-gray-500 mb-0.5">Breakeven</div>
-          <div className="text-white font-mono">{fmtMoney(p.breakeven_price)}</div>
+          <div className="text-xs text-[var(--color-text-dim)] mb-0.5">Breakeven</div>
+          <div className="text-[var(--color-text-heading)] font-mono">{fmtMoney(p.breakeven_price)}</div>
         </div>
         <div>
-          <div className="text-xs text-gray-500 mb-0.5">Unrealized PnL</div>
+          <div className="text-xs text-[var(--color-text-dim)] mb-0.5">Unrealized PnL</div>
           <PriceLabel value={pnl} className="font-mono" />
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function PositionCard({ position: p, onClose, isClosing }: Props)
             <button
               key={pct}
               onClick={() => onClose(p.symbol, String(Math.abs(qty) * pct / 100))}
-              className="flex-1 py-1 text-xs rounded border border-[#2a2e3f] text-gray-400 hover:text-white hover:border-gray-500 transition-colors cursor-pointer"
+              className="flex-1 py-1 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-heading)] hover:border-[var(--color-text-dim)] transition-colors cursor-pointer"
             >
               {pct}%
             </button>

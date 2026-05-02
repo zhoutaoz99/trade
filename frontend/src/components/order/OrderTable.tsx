@@ -19,7 +19,7 @@ export default function OrderTable({ orders, isLoading }: Props) {
     return (
       <div className="animate-pulse space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-12 bg-[#2a2e3f] rounded" />
+          <div key={i} className="h-12 bg-[var(--color-border)] rounded" />
         ))}
       </div>
     );
@@ -33,7 +33,7 @@ export default function OrderTable({ orders, isLoading }: Props) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[#2a2e3f] text-gray-500 text-xs uppercase tracking-wider">
+          <tr className="border-b border-[var(--color-border)] text-[var(--color-text-dim)] text-xs uppercase tracking-wider">
             <th className="text-left py-3 px-3">Time</th>
             <th className="text-left py-3 px-3">Order ID</th>
             <th className="text-left py-3 px-3">Symbol</th>
@@ -47,24 +47,24 @@ export default function OrderTable({ orders, isLoading }: Props) {
         </thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o.client_order_id} className="border-b border-[#2a2e3f] hover:bg-white/[0.02] transition-colors">
-              <td className="py-3 px-3 text-gray-400 whitespace-nowrap">
+            <tr key={o.client_order_id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-hover-row)] transition-colors">
+              <td className="py-3 px-3 text-[var(--color-text-muted)] whitespace-nowrap">
                 {new Date(o.created_at).toLocaleString()}
               </td>
-              <td className="py-3 px-3 font-mono text-xs text-gray-500 max-w-[120px] truncate" title={o.client_order_id}>
+              <td className="py-3 px-3 font-mono text-xs text-[var(--color-text-dim)] max-w-[120px] truncate" title={o.client_order_id}>
                 {o.client_order_id}
               </td>
-              <td className="py-3 px-3 text-white font-medium">{o.symbol}</td>
+              <td className="py-3 px-3 text-[var(--color-text-heading)] font-medium">{o.symbol}</td>
               <td className="py-3 px-3">
                 <Badge variant={o.side === 'BUY' ? 'green' : 'red'}>{o.side}</Badge>
               </td>
-              <td className="py-3 px-3 text-right font-mono text-gray-300">{parseFloat(o.executed_qty).toFixed(6)}</td>
-              <td className="py-3 px-3 text-right font-mono text-gray-300">${parseFloat(o.avg_price).toFixed(2)}</td>
+              <td className="py-3 px-3 text-right font-mono text-[var(--color-text-secondary)]">{parseFloat(o.executed_qty).toFixed(6)}</td>
+              <td className="py-3 px-3 text-right font-mono text-[var(--color-text-secondary)]">${parseFloat(o.avg_price).toFixed(2)}</td>
               <td className="py-3 px-3 text-center">
                 <Badge variant={statusVariant[o.status] || 'gray'}>{o.status}</Badge>
               </td>
-              <td className="py-3 px-3 text-right font-mono text-gray-400">${parseFloat(o.fee_amount).toFixed(4)}</td>
-              <td className={`py-3 px-3 text-right font-mono ${parseFloat(o.realized_pnl) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <td className="py-3 px-3 text-right font-mono text-[var(--color-text-muted)]">${parseFloat(o.fee_amount).toFixed(4)}</td>
+              <td className={`py-3 px-3 text-right font-mono ${parseFloat(o.realized_pnl) >= 0 ? 'text-[var(--color-green-text)]' : 'text-[var(--color-red-text)]'}`}>
                 ${parseFloat(o.realized_pnl).toFixed(2)}
               </td>
             </tr>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
-import { useCreateAccount } from '../../hooks/useAccounts';
+import { useCreateAccount, addStoredAccountId } from '../../hooks/useAccounts';
 import type { AccountType, CreateAccountRequest } from '../../types';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function CreateAccountModal({ open, onClose }: Props) {
+  const qc = useQueryClient();
   const mutation = useCreateAccount();
   const [name, setName] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('simulated');
@@ -32,7 +34,9 @@ export default function CreateAccountModal({ open, onClose }: Props) {
       payload.api_secret = apiSecret;
     }
     mutation.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: (account) => {
+        addStoredAccountId(account.id);
+        qc.invalidateQueries({ queryKey: ['accounts'] });
         setName('');
         setInitialBalance('10000');
         setApiKey('');

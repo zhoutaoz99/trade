@@ -35,29 +35,27 @@ export default function AccountPage() {
   if (!account) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-xl font-semibold text-white">Account not found</h2>
+        <h2 className="text-xl font-semibold text-[var(--color-text-heading)]">Account not found</h2>
       </div>
     );
   }
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">{account.name}</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-[var(--color-text-heading)]">{account.name}</h1>
+          <p className="text-sm text-[var(--color-text-dim)]">
             {account.account_type === 'simulated' ? '📝 Simulated' : '🔴 Live'} ·{' '}
             {account.quote_asset} · Created {new Date(account.created_at).toLocaleDateString()}
           </p>
         </div>
         <div className="text-right">
-          <div className="text-xs text-gray-500">Account ID</div>
-          <div className="text-sm font-mono text-gray-400">{account.id.substring(0, 8)}...</div>
+          <div className="text-xs text-[var(--color-text-dim)]">Account ID</div>
+          <div className="text-sm font-mono text-[var(--color-text-muted)]">{account.id.substring(0, 8)}...</div>
         </div>
       </div>
 
-      {/* Balance Summary */}
       <div className="mb-6">
         {sumLoading ? (
           <CardSkeleton />
@@ -70,9 +68,8 @@ export default function AccountPage() {
         ) : null}
       </div>
 
-      {/* Positions */}
-      <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-4">Positions</h2>
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
+        <h2 className="text-lg font-semibold text-[var(--color-text-heading)] mb-4">Positions</h2>
         <PositionTable
           positions={summary?.positions || []}
           isLoading={sumLoading}

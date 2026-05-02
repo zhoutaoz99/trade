@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAccountSummary } from '../hooks/useAccounts';
 import { usePositions } from '../hooks/usePositions';
 import { usePlaceOrder, useClosePosition, useSetLeverage } from '../hooks/useTrading';
+import { useMarketPrice } from '../hooks/useMarketPrice';
 import SymbolSelector from '../components/trade/SymbolSelector';
 import PriceBar from '../components/trade/PriceBar';
 import OrderForm from '../components/trade/OrderForm';
@@ -19,6 +20,7 @@ export default function TradePage() {
 
   const { isLoading: sumLoading } = useAccountSummary(accountId);
   const { data: posData } = usePositions(accountId, symbol);
+  const { data: priceData } = useMarketPrice(symbol);
 
   const placeOrder = usePlaceOrder(accountId || '');
   const closePos = useClosePosition(accountId || '');
@@ -28,7 +30,6 @@ export default function TradePage() {
     (p) => p.symbol === symbol && parseFloat(p.quantity) !== 0,
   );
 
-  // Update leverage from position when symbol changes
   const displayLeverage = currentPosition ? currentPosition.leverage : leverage;
 
   const handlePlaceOrder = useCallback(
@@ -84,23 +85,20 @@ export default function TradePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Trade</h1>
+      <h1 className="text-2xl font-bold text-[var(--color-text-heading)] mb-6">Trade</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column: Symbol + Chart + Leverage */}
         <div className="lg:col-span-2 space-y-4">
           <SymbolSelector value={symbol} onChange={setSymbol} />
-          <PriceBar symbol={symbol} />
-
-          {/* Order form */}
+          <PriceBar symbol={symbol} price={priceData} />
           <OrderForm
             leverage={displayLeverage}
+            price={priceData}
             onPlaceOrder={handlePlaceOrder}
             isPlacing={placeOrder.isPending}
           />
         </div>
 
-        {/* Right column: Leverage + Position */}
         <div className="space-y-4">
           <LeverageSettings
             currentLeverage={displayLeverage}
@@ -115,9 +113,9 @@ export default function TradePage() {
               isClosing={closePos.isPending}
             />
           ) : (
-            <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-5 text-center">
-              <p className="text-sm text-gray-500">No open position on {symbol}</p>
-              <p className="text-xs text-gray-600 mt-1">Place an order to open a position</p>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 text-center">
+              <p className="text-sm text-[var(--color-text-dim)]">No open position on {symbol}</p>
+              <p className="text-xs text-[var(--color-text-subtle)] mt-1">Place an order to open a position</p>
             </div>
           )}
         </div>

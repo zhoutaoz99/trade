@@ -23,7 +23,7 @@ export default function PositionTable({ positions, isLoading, onClosePosition, c
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[#2a2e3f] text-gray-500 text-xs uppercase tracking-wider">
+          <tr className="border-b border-[var(--color-border)] text-[var(--color-text-dim)] text-xs uppercase tracking-wider">
             <th className="text-left py-3 px-3">Symbol</th>
             <th className="text-right py-3 px-3">Side</th>
             <th className="text-right py-3 px-3">Quantity</th>

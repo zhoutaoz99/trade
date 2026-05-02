@@ -18,6 +18,7 @@ from app.models.account import Account
 from app.models.order import Order
 from app.models.position import Position
 from app.models.balance import Balance
+from app.core.config import settings
 from app.services.market_data import market_data_service
 from app.services.portfolio import PortfolioService
 from app.services.risk import RiskService
@@ -65,9 +66,9 @@ class TradingService:
     ) -> LeverageResult:
         account = await self._load_account(account_id)
 
-        # Validate leverage range
-        if leverage < 1 or leverage > 125:
-            raise ValueError("Leverage must be between 1 and 125")
+        # Validate leverage against risk limits
+        if leverage < 1 or leverage > settings.risk_max_leverage:
+            raise ValueError(f"Leverage {leverage} exceeds max {settings.risk_max_leverage}")
 
         gateway = await self._get_gateway(account_id)
         result = await gateway.set_leverage(account_id, symbol, leverage)
@@ -193,6 +194,55 @@ class TradingService:
 
     # ─── Query ────────────────────────────────────────────────────────────────
 
+    async def list_orders(
+        self,
+        account_id: str,
+        symbol: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[OrderResult]:
+        """List orders for an account, newest first."""
+        account = await self._load_account(account_id)
+        aid = account.id
+
+        stmt = select(Order).where(Order.account_id == aid)
+        if symbol:
+            stmt = stmt.where(Order.symbol == symbol)
+        stmt = stmt.order_by(Order.created_at.desc()).limit(limit).offset(offset)
+        result = await self._session.execute(stmt)
+        orders = result.scalars().all()
+
+        results = []
+        for order in orders:
+            # Aggregate fees from fills
+            from app.models.fill import Fill
+            fill_stmt = select(Fill).where(Fill.order_id == order.id)
+            fill_result = await self._session.execute(fill_stmt)
+            fills = fill_result.scalars().all()
+
+            total_fee = sum((f.fee_amount for f in fills), Decimal("0"))
+            total_pnl = sum((f.realized_pnl for f in fills), Decimal("0"))
+
+            results.append(OrderResult(
+                account_id=account_id,
+                account_type=account.account_type,
+                client_order_id=order.client_order_id,
+                exchange_order_id=order.exchange_order_id,
+                symbol=order.symbol,
+                side=order.side,
+                order_type=order.type,
+                status=order.status,
+                executed_qty=order.executed_qty,
+                avg_price=order.avg_price,
+                leverage=order.requested_leverage,
+                realized_pnl=total_pnl,
+                fee_amount=total_fee,
+                reduce_only=order.reduce_only,
+                created_at=order.created_at,
+            ))
+
+        return results
+
     async def get_order(
         self, account_id: str, client_order_id: str
     ) -> Optional[OrderResult]:
@@ -257,22 +307,33 @@ class TradingService:
                 stmt = select(Position).where(Position.account_id == aid)
             result = await self._session.execute(stmt)
             positions = result.scalars().all()
-            return [
-                {
-                    "account_id": account_id,
-                    "symbol": p.symbol,
-                    "position_side": p.position_side,
-                    "quantity": str(p.quantity),
-                    "entry_price": str(p.entry_price),
-                    "breakeven_price": str(p.breakeven_price),
-                    "leverage": p.leverage,
-                    "margin_type": p.margin_type,
-                    "isolated_margin": str(p.isolated_margin),
-                    "unrealized_pnl": str(p.unrealized_pnl),
-                    "realized_pnl": str(p.realized_pnl),
-                }
-                for p in positions
-            ]
+
+            # Recalculate unrealized PnL with live mark prices
+            pnl_results = []
+            for p in positions:
+                if p.quantity != 0:
+                    try:
+                        live_pnl = await self._portfolio.calculate_unrealized_pnl(aid, p.symbol)
+                    except Exception:
+                        live_pnl = p.unrealized_pnl
+                else:
+                    live_pnl = Decimal("0")
+                pnl_results.append(
+                    {
+                        "account_id": account_id,
+                        "symbol": p.symbol,
+                        "position_side": p.position_side,
+                        "quantity": str(p.quantity),
+                        "entry_price": str(p.entry_price),
+                        "breakeven_price": str(p.breakeven_price),
+                        "leverage": p.leverage,
+                        "margin_type": p.margin_type,
+                        "isolated_margin": str(p.isolated_margin),
+                        "unrealized_pnl": str(live_pnl),
+                        "realized_pnl": str(p.realized_pnl),
+                    }
+                )
+            return pnl_results
         else:
             # Live account: query Binance REST
             cred = await self._portfolio.get_credential(aid)
@@ -338,9 +399,20 @@ class TradingService:
             positions_result = await self._session.execute(positions_stmt)
             positions = positions_result.scalars().all()
 
-            total_unrealized = sum(
-                (p.unrealized_pnl for p in positions), Decimal("0")
-            )
+            # Recalculate unrealized PnL with live mark prices
+            live_pnls: dict[str, Decimal] = {}
+            total_unrealized = Decimal("0")
+            for p in positions:
+                if p.quantity != 0:
+                    try:
+                        live_pnl = await self._portfolio.calculate_unrealized_pnl(aid, p.symbol)
+                    except Exception:
+                        live_pnl = p.unrealized_pnl
+                else:
+                    live_pnl = Decimal("0")
+                live_pnls[p.symbol] = live_pnl
+                total_unrealized += live_pnl
+
             total_margin = sum(
                 (abs(p.quantity) * p.entry_price / Decimal(str(p.leverage))
                  for p in positions if p.quantity != 0),
@@ -372,7 +444,7 @@ class TradingService:
                         "leverage": p.leverage,
                         "margin_type": p.margin_type,
                         "isolated_margin": str(p.isolated_margin),
-                        "unrealized_pnl": str(p.unrealized_pnl),
+                        "unrealized_pnl": str(live_pnls[p.symbol]),
                         "realized_pnl": str(p.realized_pnl),
                     }
                     for p in positions

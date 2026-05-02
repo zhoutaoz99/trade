@@ -135,6 +135,46 @@ async def close_position(
     )
 
 
+@router.get("/orders", response_model=list[OrderResponse])
+async def list_orders(
+    account_id: str = Query(..., description="Account ID"),
+    symbol: str | None = Query(None, description="Trading symbol filter"),
+    limit: int = Query(50, ge=1, le=200, description="Max results"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    db: AsyncSession = Depends(get_db),
+):
+    """List orders for an account, newest first."""
+    svc = TradingService(db)
+    try:
+        results = await svc.list_orders(account_id, symbol, limit, offset)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("list_orders failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return [
+        OrderResponse(
+            account_id=r.account_id,
+            account_type=r.account_type,
+            client_order_id=r.client_order_id,
+            exchange_order_id=r.exchange_order_id,
+            symbol=r.symbol,
+            side=r.side,
+            order_type=r.order_type,
+            status=r.status,
+            executed_qty=str(r.executed_qty),
+            avg_price=str(r.avg_price),
+            leverage=r.leverage,
+            realized_pnl=str(r.realized_pnl),
+            fee_amount=str(r.fee_amount),
+            reduce_only=r.reduce_only,
+            created_at=r.created_at,
+        )
+        for r in results
+    ]
+
+
 @router.get("/orders/{client_order_id}", response_model=OrderResponse)
 async def get_order(
     client_order_id: str,

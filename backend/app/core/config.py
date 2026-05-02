@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     binance_recv_window: int = 5000
     binance_rest_base_url: str = "https://fapi.binance.com"
     binance_ws_base_url: str = "wss://fstream.binance.com"
+    binance_verify_ssl: bool = True  # 公司网络有 TLS 代理时可设为 False
 
     # Trading defaults
     default_quote_asset: str = "USDT"

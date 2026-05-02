@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import ssl
 import time
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Optional
 
+import certifi
 import httpx
 import websockets
 
@@ -62,14 +64,25 @@ class MarketDataService:
         self._ws_base = settings.binance_ws_base_url
         self._http: httpx.AsyncClient | None = None
 
+        # SSL context — uses certifi bundle; can be disabled for corporate proxies
+        self._ssl_context: ssl.SSLContext | None = None
+        if settings.binance_verify_ssl:
+            self._ssl_context = ssl.create_default_context(cafile=certifi.where())
+        else:
+            _ctx = ssl.create_default_context()
+            _ctx.check_hostname = False
+            _ctx.verify_mode = ssl.CERT_NONE
+            self._ssl_context = _ctx
+            logger.warning("Binance SSL verification disabled")
+
         # Symbol cache: symbol -> SymbolInfo
         self._symbols: dict[str, SymbolInfo] = {}
         self._synced: bool = False
 
-        # Price cache: symbol -> BookTicker
-        self._book_ticks: dict[str, BookTicker] = {}
-        # Mark price cache: symbol -> Decimal
-        self._mark_prices: dict[str, Decimal] = {}
+        # Price cache: symbol -> (BookTicker, timestamp)
+        self._book_ticks: dict[str, tuple[BookTicker, float]] = {}
+        # Mark price cache: symbol -> (price, timestamp)
+        self._mark_prices: dict[str, tuple[Decimal, float]] = {}
 
         # WebSocket management
         self._ws_connection: Optional[websockets.WebSocketClientProtocol] = None
@@ -80,7 +93,8 @@ class MarketDataService:
     @property
     def http(self) -> httpx.AsyncClient:
         if self._http is None:
-            self._http = httpx.AsyncClient(timeout=httpx.Timeout(15.0))
+            verify = self._ssl_context if settings.binance_verify_ssl else False
+            self._http = httpx.AsyncClient(timeout=httpx.Timeout(15.0), verify=verify)
         return self._http
 
     # ─── Exchange Info ────────────────────────────────────────────────────────
@@ -154,18 +168,22 @@ class MarketDataService:
     async def get_latest_book_ticker(self, symbol: str) -> BookTicker:
         """Get the latest book ticker for a symbol.
 
-        Falls back to REST if no WebSocket data is available.
+        Returns cached WebSocket data if fresh, otherwise falls back to REST.
         """
-        tick = self._book_ticks.get(symbol)
-        if tick is not None:
-            return tick
+        entry = self._book_ticks.get(symbol)
+        if entry is not None and (time.time() - entry[1]) < 2:
+            return entry[0]
         return await self._rest_book_ticker(symbol)
 
     async def get_latest_mark_price(self, symbol: str) -> Decimal:
-        """Get the latest mark price for a symbol."""
-        mp = self._mark_prices.get(symbol)
-        if mp is not None:
-            return mp
+        """Get the latest mark price for a symbol.
+
+        Returns cached WebSocket data if fresh, otherwise falls back to REST.
+        """
+        entry = self._mark_prices.get(symbol)
+        # Use cache if populated by WebSocket (fresh within 2s)
+        if entry is not None and (time.time() - entry[1]) < 2:
+            return entry[0]
         return await self._rest_mark_price(symbol)
 
     # ─── REST Fallbacks ───────────────────────────────────────────────────────
@@ -187,7 +205,7 @@ class MarketDataService:
             ask_qty=Decimal(str(data["askQty"])),
             update_time_ms=int(time.time() * 1000),
         )
-        self._book_ticks[symbol] = tick
+        self._book_ticks[symbol] = (tick, time.time())
         return tick
 
     async def _rest_mark_price(self, symbol: str) -> Decimal:
@@ -200,7 +218,7 @@ class MarketDataService:
             raise RuntimeError(f"No mark price available for {symbol}")
 
         mp = Decimal(str(data["markPrice"]))
-        self._mark_prices[symbol] = mp
+        self._mark_prices[symbol] = (mp, time.time())
         return mp
 
     # ─── WebSocket ────────────────────────────────────────────────────────────
@@ -256,7 +274,7 @@ class MarketDataService:
 
         while self._running:
             try:
-                async with websockets.connect(url, ping_interval=20) as ws:
+                async with websockets.connect(url, ping_interval=20, ssl=self._ssl_context) as ws:
                     self._ws_connection = ws
                     backoff = 1.0
                     logger.info("Market data WebSocket connected")
@@ -305,13 +323,13 @@ class MarketDataService:
             ask_qty=Decimal(str(data.get("A", 0))),
             update_time_ms=int(time.time() * 1000),
         )
-        self._book_ticks[symbol] = tick
+        self._book_ticks[symbol] = (tick, time.time())
 
     def _handle_mark_price(self, data: dict) -> None:
         symbol = data.get("s", "")
         mp_str = data.get("p", "")
         if symbol and mp_str:
-            self._mark_prices[symbol] = Decimal(str(mp_str))
+            self._mark_prices[symbol] = (Decimal(str(mp_str)), time.time())
 
 
 # Global singleton

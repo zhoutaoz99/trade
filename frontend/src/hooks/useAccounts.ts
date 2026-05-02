@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { getAccount, createAccount } from '../api/accounts';
 import { getAccountSummary } from '../api/futures';
 import type { CreateAccountRequest } from '../types';
@@ -52,18 +52,13 @@ export function useAccountSummary(accountId: string | undefined) {
     queryKey: ['account-summary', accountId],
     queryFn: () => getAccountSummary(accountId!),
     enabled: !!accountId,
-    refetchInterval: 15_000,
+    refetchInterval: 5_000,
+    staleTime: 3_000,
   });
 }
 
 export function useCreateAccount() {
-  const qc = useQueryClient();
-
   return useMutation({
     mutationFn: (data: CreateAccountRequest) => createAccount(data),
-    onSuccess: (account) => {
-      addStoredAccountId(account.id);
-      qc.invalidateQueries({ queryKey: ['accounts'] });
-    },
   });
 }

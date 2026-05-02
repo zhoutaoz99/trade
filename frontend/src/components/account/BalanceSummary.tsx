@@ -18,8 +18,8 @@ export default function BalanceSummary({ balances, totalUnrealizedPnl, totalMarg
       <StatCard label="Wallet Balance" value={fmtMoney(usdt.wallet_balance)} />
       <StatCard label="Available" value={fmtMoney(usdt.available_balance)} />
       <StatCard label="Margin Used" value={fmtMoney(totalMarginUsed)} />
-      <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-4">
-        <div className="text-xs text-gray-500 mb-1">Unrealized PnL</div>
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+        <div className="text-xs text-[var(--color-text-dim)] mb-1">Unrealized PnL</div>
         <PriceLabel value={totalUnrealizedPnl} className="text-xl font-bold" />
       </div>
     </div>
@@ -28,9 +28,9 @@ export default function BalanceSummary({ balances, totalUnrealizedPnl, totalMarg
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-4">
-      <div className="text-xs text-gray-500 mb-1">{label}</div>
-      <div className="text-xl font-bold text-white font-mono">{value}</div>
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+      <div className="text-xs text-[var(--color-text-dim)] mb-1">{label}</div>
+      <div className="text-xl font-bold text-[var(--color-text-heading)] font-mono">{value}</div>
     </div>
   );
 }

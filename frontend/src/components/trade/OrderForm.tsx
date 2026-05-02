@@ -1,17 +1,27 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { OrderSide } from '../../types';
+import { fmtMoney } from '../../utils/format';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 
 interface Props {
   leverage: number;
+  price?: { ask_price: string; bid_price: string };
   onPlaceOrder: (side: OrderSide, qty: string) => void;
   isPlacing: boolean;
 }
 
-export default function OrderForm({ leverage, onPlaceOrder, isPlacing }: Props) {
+export default function OrderForm({ leverage, price, onPlaceOrder, isPlacing }: Props) {
   const [side, setSide] = useState<OrderSide>('BUY');
   const [qty, setQty] = useState('0.001');
+
+  const orderAmount = useMemo(() => {
+    const q = parseFloat(qty);
+    if (!q || q <= 0 || !price) return null;
+    const execPrice = side === 'BUY' ? parseFloat(price.ask_price) : parseFloat(price.bid_price);
+    if (!execPrice || execPrice <= 0) return null;
+    return q * execPrice;
+  }, [qty, side, price]);
 
   const handleSubmit = () => {
     if (!qty || parseFloat(qty) <= 0) return;
@@ -19,15 +29,15 @@ export default function OrderForm({ leverage, onPlaceOrder, isPlacing }: Props) 
   };
 
   return (
-    <div className="bg-[#1a1d2e] border border-[#2a2e3f] rounded-xl p-5">
-      <h3 className="text-sm font-semibold text-white mb-4">Market Order</h3>
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-[var(--color-text-heading)] mb-4">Market Order</h3>
 
       {/* Side tabs */}
       <div className="flex mb-4">
         <button
           onClick={() => setSide('BUY')}
           className={`flex-1 py-2 text-sm font-semibold rounded-l-lg transition-colors cursor-pointer ${
-            side === 'BUY' ? 'bg-green-600 text-white' : 'bg-[#0f1117] text-gray-400 hover:text-white'
+            side === 'BUY' ? 'bg-green-600 text-white' : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text-heading)]'
           }`}
         >
           BUY / LONG
@@ -35,7 +45,7 @@ export default function OrderForm({ leverage, onPlaceOrder, isPlacing }: Props) 
         <button
           onClick={() => setSide('SELL')}
           className={`flex-1 py-2 text-sm font-semibold rounded-r-lg transition-colors cursor-pointer ${
-            side === 'SELL' ? 'bg-red-600 text-white' : 'bg-[#0f1117] text-gray-400 hover:text-white'
+            side === 'SELL' ? 'bg-red-600 text-white' : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text-heading)]'
           }`}
         >
           SELL / SHORT
@@ -59,8 +69,8 @@ export default function OrderForm({ leverage, onPlaceOrder, isPlacing }: Props) 
               onClick={() => setQty(preset)}
               className={`px-2 py-1 text-xs rounded border transition-colors cursor-pointer ${
                 qty === preset
-                  ? 'border-blue-500 text-blue-400 bg-blue-500/10'
-                  : 'border-[#2a2e3f] text-gray-400 hover:border-gray-500'
+                  ? 'border-blue-500 text-[var(--color-blue-text)] bg-[var(--color-blue-bg)]'
+                  : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-dim)]'
               }`}
             >
               {preset}
@@ -70,14 +80,26 @@ export default function OrderForm({ leverage, onPlaceOrder, isPlacing }: Props) 
       </div>
 
       {/* Order estimate */}
-      <div className="bg-[#0f1117] rounded-lg p-3 mb-4 space-y-1 text-xs">
-        <div className="flex justify-between text-gray-400">
+      <div className="bg-[var(--color-bg)] rounded-lg p-3 mb-4 space-y-1 text-xs">
+        <div className="flex justify-between text-[var(--color-text-muted)]">
           <span>Leverage</span>
-          <span className="text-white">{leverage}x</span>
+          <span className="text-[var(--color-text-heading)]">{leverage}x</span>
         </div>
-        <div className="flex justify-between text-gray-400">
+        <div className="flex justify-between text-[var(--color-text-muted)]">
+          <span>Est. Price</span>
+          <span className="text-[var(--color-text-heading)]">
+            {price ? fmtMoney(side === 'BUY' ? parseFloat(price.ask_price) : parseFloat(price.bid_price)) : '--'}
+          </span>
+        </div>
+        <div className="flex justify-between text-[var(--color-text-muted)]">
+          <span>Est. Order Amount</span>
+          <span className="text-[var(--color-text-heading)] font-semibold">
+            {orderAmount !== null ? fmtMoney(orderAmount) : '--'}
+          </span>
+        </div>
+        <div className="flex justify-between text-[var(--color-text-muted)]">
           <span>Est. Fee (taker)</span>
-          <span className="text-white">0.05%</span>
+          <span className="text-[var(--color-text-heading)]">0.05%</span>
         </div>
       </div>
 
