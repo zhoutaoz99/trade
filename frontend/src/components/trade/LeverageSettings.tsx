@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '../ui/Button';
 
 interface Props {
@@ -11,6 +11,21 @@ const PRESETS = [1, 2, 3, 5, 10, 20, 50, 100, 125];
 
 export default function LeverageSettings({ currentLeverage, onSetLeverage, isSetting }: Props) {
   const [value, setValue] = useState(currentLeverage);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const userHasEdited = useRef(false);
+
+  // Sync internal value when currentLeverage prop changes from outside
+  // (e.g., position data loaded, symbol changed). After the user submits,
+  // the prop will match their value and we reset the edit flag.
+  useEffect(() => {
+    if (currentLeverage === valueRef.current) {
+      userHasEdited.current = false;
+    }
+    if (!userHasEdited.current) {
+      setValue(currentLeverage);
+    }
+  }, [currentLeverage]);
 
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5">
@@ -25,7 +40,7 @@ export default function LeverageSettings({ currentLeverage, onSetLeverage, isSet
           min={1}
           max={125}
           value={value}
-          onChange={(e) => setValue(parseInt(e.target.value))}
+          onChange={(e) => { userHasEdited.current = true; setValue(parseInt(e.target.value)); }}
           className="flex-1 accent-blue-500"
         />
         <span className="text-[var(--color-text-heading)] font-mono font-bold text-lg w-12 text-right">{value}x</span>
@@ -35,7 +50,7 @@ export default function LeverageSettings({ currentLeverage, onSetLeverage, isSet
         {PRESETS.map((p) => (
           <button
             key={p}
-            onClick={() => setValue(p)}
+            onClick={() => { userHasEdited.current = true; setValue(p); }}
             className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
               value === p
                 ? 'border-blue-500 text-[var(--color-blue-text)] bg-[var(--color-blue-bg)]'

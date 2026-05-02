@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAccountSummary } from '../hooks/useAccounts';
 import { usePositions } from '../hooks/usePositions';
@@ -15,8 +15,9 @@ import { CardSkeleton } from '../components/ui/LoadingSkeleton';
 
 export default function TradePage() {
   const { accountId } = useParams<{ accountId: string }>();
-  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [symbol, setSymbol] = useState('ETHUSDT');
   const [leverage, setLeverage] = useState(5);
+  const leverageFromPosition = useRef(false);
 
   const { isLoading: sumLoading } = useAccountSummary(accountId);
   const { data: posData } = usePositions(accountId, symbol);
@@ -29,6 +30,25 @@ export default function TradePage() {
   const currentPosition = posData?.positions?.find(
     (p) => p.symbol === symbol && parseFloat(p.quantity) !== 0,
   );
+
+  // Reset leverage state when switching symbols
+  const prevSymbol = useRef(symbol);
+  useEffect(() => {
+    if (prevSymbol.current !== symbol) {
+      prevSymbol.current = symbol;
+      setLeverage(5);
+      leverageFromPosition.current = false;
+    }
+  }, [symbol]);
+
+  // Sync leverage from persisted position data on first load for each symbol
+  const anyPosition = posData?.positions?.find((p) => p.symbol === symbol);
+  useEffect(() => {
+    if (anyPosition && !leverageFromPosition.current) {
+      setLeverage(anyPosition.leverage);
+      leverageFromPosition.current = true;
+    }
+  }, [anyPosition]);
 
   const displayLeverage = currentPosition ? currentPosition.leverage : leverage;
 
