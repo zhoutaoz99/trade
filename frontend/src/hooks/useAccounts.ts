@@ -62,3 +62,25 @@ export function useCreateAccount() {
     mutationFn: (data: CreateAccountRequest) => createAccount(data),
   });
 }
+
+export function useAccountSummaries(accountIds: string[]) {
+  return useQuery({
+    queryKey: ['account-summaries', accountIds],
+    queryFn: async () => {
+      if (accountIds.length === 0) return {};
+      const results = await Promise.allSettled(
+        accountIds.map((id) => getAccountSummary(id))
+      );
+      const map: Record<string, import('../types').AccountSummary> = {};
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') {
+          map[accountIds[i]] = r.value;
+        }
+      });
+      return map;
+    },
+    enabled: accountIds.length > 0,
+    refetchInterval: 10_000,
+    staleTime: 5_000,
+  });
+}

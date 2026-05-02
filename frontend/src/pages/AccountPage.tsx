@@ -63,6 +63,10 @@ export default function AccountPage() {
           <BalanceSummary
             balances={summary.balances}
             totalUnrealizedPnl={summary.total_unrealized_pnl}
+            totalRealizedPnl={summary.total_realized_pnl}
+            totalPnl={summary.total_pnl}
+            dailyPnl={summary.daily_pnl}
+            monthlyPnl={summary.monthly_pnl}
             totalMarginUsed={summary.total_margin_used}
           />
         ) : null}

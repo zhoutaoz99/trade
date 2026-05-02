@@ -1,13 +1,36 @@
 import { useNavigate } from 'react-router-dom';
-import type { Account } from '../../types';
+import type { Account, AccountSummary } from '../../types';
 import Badge from '../ui/Badge';
 
 interface Props {
   account: Account;
+  summary?: AccountSummary;
 }
 
-export default function AccountCard({ account }: Props) {
+function fmtPnl(value: string): { text: string; cls: string } {
+  const n = parseFloat(value);
+  if (isNaN(n)) return { text: '$0.00', cls: '' };
+  const prefix = n >= 0 ? '+' : '';
+  return {
+    text: `${prefix}$${n.toFixed(2)}`,
+    cls: n > 0 ? 'text-[var(--color-green-text)]' : n < 0 ? 'text-[var(--color-red-text)]' : '',
+  };
+}
+
+function PnlRow({ label, value }: { label: string; value: string }) {
+  const { text, cls } = fmtPnl(value);
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-[var(--color-text-dim)]">{label}</span>
+      <span className={`font-mono font-medium ${cls}`}>{text}</span>
+    </div>
+  );
+}
+
+export default function AccountCard({ account, summary }: Props) {
   const navigate = useNavigate();
+
+  const hasPnl = summary !== undefined;
 
   return (
     <div
@@ -22,10 +45,27 @@ export default function AccountCard({ account }: Props) {
           {account.account_type}
         </Badge>
       </div>
-      <div className="text-2xl font-bold text-[var(--color-text-heading)] font-mono">
-        ${parseFloat(account.initial_balance).toLocaleString()}
-      </div>
-      <div className="text-xs text-[var(--color-text-dim)] mt-2">
+
+      {hasPnl ? (
+        <>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className={`text-2xl font-bold font-mono ${fmtPnl(summary.total_pnl).cls}`}>
+              {fmtPnl(summary.total_pnl).text}
+            </span>
+            <span className="text-xs text-[var(--color-text-dim)]">total P&L</span>
+          </div>
+          <div className="space-y-0.5 mb-3">
+            <PnlRow label="Today" value={summary.daily_pnl} />
+            <PnlRow label="This month" value={summary.monthly_pnl} />
+          </div>
+        </>
+      ) : (
+        <div className="text-2xl font-bold text-[var(--color-text-heading)] font-mono mb-3">
+          ${parseFloat(account.initial_balance).toLocaleString()}
+        </div>
+      )}
+
+      <div className="text-xs text-[var(--color-text-dim)]">
         {account.quote_asset} · Created {new Date(account.created_at).toLocaleDateString()}
       </div>
     </div>

@@ -107,6 +107,10 @@ export interface AccountSummary {
   balances: Balance[];
   positions: Position[];
   total_unrealized_pnl: string;
+  total_realized_pnl: string;
+  total_pnl: string;
+  daily_pnl: string;
+  monthly_pnl: string;
   total_margin_used: string;
 }
 

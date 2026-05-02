@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { useAccountList } from '../hooks/useAccounts';
+import { useAccountList, useAccountSummaries } from '../hooks/useAccounts';
 import AccountCard from '../components/account/AccountCard';
 import CreateAccountModal from '../components/account/CreateAccountModal';
 import { CardSkeleton } from '../components/ui/LoadingSkeleton';
@@ -8,6 +8,9 @@ import { CardSkeleton } from '../components/ui/LoadingSkeleton';
 export default function DashboardPage() {
   const { data: accounts, isLoading } = useAccountList();
   const [showCreate, setShowCreate] = useState(false);
+
+  const accountIds = accounts?.map((a) => a.id) ?? [];
+  const { data: summaries } = useAccountSummaries(accountIds);
 
   return (
     <div>
@@ -34,7 +37,7 @@ export default function DashboardPage() {
       ) : accounts && accounts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {accounts.map((a) => (
-            <AccountCard key={a.id} account={a} />
+            <AccountCard key={a.id} account={a} summary={summaries?.[a.id]} />
           ))}
         </div>
       ) : (

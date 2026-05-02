@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.gateways.base import ExchangeGateway, LeverageResult, OrderResult
@@ -18,6 +18,7 @@ from app.models.account import Account
 from app.models.order import Order
 from app.models.position import Position
 from app.models.balance import Balance
+from app.models.fill import Fill
 from app.core.config import settings
 from app.services.market_data import market_data_service
 from app.services.portfolio import PortfolioService
@@ -215,7 +216,6 @@ class TradingService:
         results = []
         for order in orders:
             # Aggregate fees from fills
-            from app.models.fill import Fill
             fill_stmt = select(Fill).where(Fill.order_id == order.id)
             fill_result = await self._session.execute(fill_stmt)
             fills = fill_result.scalars().all()
@@ -260,7 +260,6 @@ class TradingService:
                 return None
 
             # Aggregate fees from fills
-            from app.models.fill import Fill
             fill_stmt = select(Fill).where(Fill.order_id == order.id)
             fill_result = await self._session.execute(fill_stmt)
             fills = fill_result.scalars().all()
@@ -419,6 +418,32 @@ class TradingService:
                 Decimal("0"),
             )
 
+            # Total realized P&L (all-time, net of fees)
+            total_realized = Decimal("0")
+            total_realized_row = await self._session.execute(
+                select(func.coalesce(func.sum(Fill.realized_pnl - Fill.fee_amount), 0))
+                .where(Fill.account_id == aid)
+            )
+            total_realized = Decimal(str(total_realized_row.scalar()))
+
+            # Daily P&L (today UTC, net of fees)
+            today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+            daily_row = await self._session.execute(
+                select(func.coalesce(func.sum(Fill.realized_pnl - Fill.fee_amount), 0))
+                .where(Fill.account_id == aid, Fill.created_at >= today_start)
+            )
+            daily_pnl = Decimal(str(daily_row.scalar()))
+
+            # Monthly P&L (this month UTC, net of fees)
+            month_start = today_start.replace(day=1)
+            monthly_row = await self._session.execute(
+                select(func.coalesce(func.sum(Fill.realized_pnl - Fill.fee_amount), 0))
+                .where(Fill.account_id == aid, Fill.created_at >= month_start)
+            )
+            monthly_pnl = Decimal(str(monthly_row.scalar()))
+
+            total_pnl = total_realized + total_unrealized
+
             return {
                 "account_id": account_id,
                 "account_type": account.account_type,
@@ -450,6 +475,10 @@ class TradingService:
                     for p in positions
                 ],
                 "total_unrealized_pnl": str(total_unrealized),
+                "total_realized_pnl": str(total_realized),
+                "total_pnl": str(total_pnl),
+                "daily_pnl": str(daily_pnl),
+                "monthly_pnl": str(monthly_pnl),
                 "total_margin_used": str(total_margin),
             }
         else:
@@ -520,5 +549,9 @@ class TradingService:
                     for p in positions_raw
                 ],
                 "total_unrealized_pnl": data.get("totalUnrealizedProfit", "0"),
+                "total_realized_pnl": "0",
+                "total_pnl": data.get("totalUnrealizedProfit", "0"),
+                "daily_pnl": "0",
+                "monthly_pnl": "0",
                 "total_margin_used": data.get("totalMarginBalance", "0"),
             }

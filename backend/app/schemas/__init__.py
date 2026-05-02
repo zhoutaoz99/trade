@@ -157,6 +157,10 @@ class AccountSummaryResponse(BaseModel):
     balances: list[BalanceItem]
     positions: list[PositionResponse]
     total_unrealized_pnl: str
+    total_realized_pnl: str
+    total_pnl: str
+    daily_pnl: str
+    monthly_pnl: str
     total_margin_used: str
 
 
