@@ -71,7 +71,6 @@ sudo systemctl restart postgresql
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
 
 # 2. 配置环境变量（如 .env 不存在）
 cp .env.example .env
